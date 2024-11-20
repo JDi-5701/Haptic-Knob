@@ -1,0 +1,14 @@
+<launch>
+    <arg name="num_positions" default="0"/>
+    <arg name="position" default="200"/>
+    <arg name="position_width_radians" default="0.08"/>
+    <arg name="detent_strength_unit" default="0.5"/>
+
+    <param name="num_positions" value="$(arg num_positions)"/>
+    <param name="position" value="$(arg position)"/>
+    <param name="position_width_radians" value="$(arg position_width_radians)"/>
+    <param name="detent_strength_unit" value="$(arg detent_strength_unit)"/>    
+
+    <node pkg="knob_robot_control" type="knob_setup.py" name="knob_publisher" output="screen">
+    </node>
+</launch>

@@ -1,0 +1,4 @@
+<launch>
+    <node name="fake_robot_state_publisher" pkg="knob_robot_control" type="static_fake_robot_state_publisher.py" output="screen"/>
+    <!-- <node name="fake_joint_publisher" pkg="knob_robot_control" type="fake_knob_feedback_controller.py" output="screen"/> -->
+</launch>
