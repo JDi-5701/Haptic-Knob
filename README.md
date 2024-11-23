@@ -1,60 +1,53 @@
 # knob_kuka_ws
 required pkg: ros-noetic-rosserial
 
-## First Easy Demo
-Open the simulation and the rosserial node:
-```bash
-$ roslaunch knob_robot_control lwr_sim.launch
+## Run demo in with fake topics:
+
+```
+$ roslaunch knob_robot_control demo.launch 
+```
+
+### ROS topics:
+Currently the rostopics are still the one from kuka iiwa, modify when franka is ready.
+
+#### position forward control:
+**/knob_state ----> /fri_cartesian_command**
+
+/fri_cartesian_command: robot pose command controlled via teleoparation interface, controlled axis can be changed with GUI or rosparam /controlled_axis \
+/knob_state: read from current knob position \
+
+/fri_cartesian_pose: current pose published from robot, only used when reset pose command, can be activated using GUI button "reset target pose"
+
+#### force feedback:
+**/tcp_force <---- /tcp_wrench**
+
+/tcp_force: 1D force value to command the knoob\
+/tcp_wrench: 6D force torque from current robot TCP
+
+### ROS params:
+/clamp_force_threshold_max \
+/clamp_force_threshold_min \
+/controlled_axis: GUI options for position control on 3 dimenstions x, y or z \
+/fake_tcp_force: mannually set fake robot tcp force value \
+/position_factor: can be changed using GUI \
+/reset_pose: set to True for 3 seconds when pressing the GUI button \
+/tcp_force_feedback_ratio: can be changed using GUI \
+/tcp_force_offset
+
+
+
+## Real knob:
+
+```
 $ roslaunch knob_robot_control rosserial.launch
 ```
 
-Then Start the `lwr_controller` node:
-```bash
-$ rosrun knob_robot_control lwr_controller.py
-```
-
-
 ## Real Robot Demo
 
-```bash
-ssh fortiss@10.200.2.61
-roslaunch iiwa_driver start.launch
-```
+Modify with real franka robot.
 
-```bash
-cobot_mode
-roslaunch knob_robot_control rosserial.launch
-```
-    
-```bash
-roslaunch knob_robot_control knob_controller.launch
-```
 
 ## GUI Demo
 
-TODO: 
-
-GUI interface for the robot control
-
-## Trouble Shooting
-
-
-###  ModuleNotFoundError: No module named 'PyQt5.QtChart'
-
-```
-pip install -U pip
-pip install pyqt5 --config-settings --confirm-license= --verbose
-```
-
-
-## UPDATE in Dec.20.2023
-
-Frist, you need to change the robot IP in the `src/robot_movement_interface/iiwa_driver/ros/config/config.yaml`
-
-Then open the terminals and run the following commands:
-
-```bash
-roslaunch iiwa_driver start.launch
-rosrun knob_robot_control robot_controller.py
-```
+see script/qt_test.py
 

@@ -1,5 +1,21 @@
 <launch>
-    <!-- <include file="$(find knob_robot_control)/launch/knob_force_feedback.launch"/>
-    <include file="$(find knob_robot_control)/launch/knob_one_way_position_controller.launch"/> -->
+    <!-- Define arguments with default values -->
+    <arg name="fake_robot" default="true"/>
+    <arg name="fake_knob" default="true"/>
+
+    <!-- Launch the main controller node -->
     <node pkg="knob_robot_control" type="knob_feedback_position_controller.py" name="knob_feedback_position_controller" output="screen"/>
+
+    <!-- Launch the qt gui -->
+    <node pkg="knob_robot_control" type="qt_test.py" name="qt_gui" output="screen"/>
+
+    <!-- Conditionally launch fake_robot_state_pub -->
+    <group if="$(arg fake_robot)">
+        <node pkg="knob_robot_control" type="fake_robot_state_pub.py" name="fake_robot_state_pub" output="screen"/>
+    </group>
+
+    <!-- Conditionally launch fake_knob_pub -->
+    <group if="$(arg fake_knob)">
+        <node pkg="knob_robot_control" type="fake_knob_pub.py" name="fake_knob_pub" output="screen"/>
+    </group>
 </launch>

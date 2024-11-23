@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-# Author: Xiangyu Fu
-# Date: 2023-09-01
-# Description: This script is used to control the robot arm through the robot movement interface.
 
+import sys
+import signal
 import rospy
 import math
-#from robot_movement_interface.msg import Command, CommandList, EulerFrame
-#from robot_movement_interface.msg import Result
-from sensor_msgs.msg import JointState
 from std_msgs.msg import String, Int32, Float32
 from knob_robot_control.msg import KnobState, KnobCommand
 from geometry_msgs.msg import WrenchStamped, PoseStamped
-from threading import Lock
 
 
 class RobotController:
@@ -19,13 +14,16 @@ class RobotController:
     def __init__(self):
         rospy.init_node('robot_controller', anonymous=True)
 
+        # Handle SIGINT (Ctrl+C)
+        signal.signal(signal.SIGINT, self.handle_exit)
+
         self.publish_rate = rospy.Rate(100)
         
-        #Publishers and Subscribers
+        # Publishers and Subscribers
         self.fri_cartesian_move_publisher = rospy.Publisher('/fri_cartesian_command', PoseStamped, queue_size=10)
         self.knob_state_subscriber = rospy.Subscriber("/knob_state", KnobState, self.knob_state_callback)
         self.robot_tcp_cartesian_subscriber = rospy.Subscriber("/fri_cartesian_pose", PoseStamped, self.robot_cartesian_pose_callback)
-        self.tcp_wrench_sub = rospy.Subscriber("/ft_sensor/netft_data", WrenchStamped, self.tcp_wrench_callback)
+        self.tcp_wrench_sub = rospy.Subscriber("/tcp_wrench", WrenchStamped, self.tcp_wrench_callback)
         self.knob_force_pub = rospy.Publisher("/tcp_force", Float32, queue_size=1)
 
         self.robot_tcp_position_current = [-0.0000, 0.662, 0.330]
@@ -88,6 +86,14 @@ class RobotController:
         
         rospy.set_param('reset_pose', False)    
 
+    def handle_exit(self, signum, frame):
+        """
+        Handle SIGINT (Ctrl+C) for graceful shutdown.
+        """
+        rospy.loginfo("Ctrl+C detected. Shutting down the Robot Controller...")
+        rospy.signal_shutdown("Shutting down due to Ctrl+C")
+        sys.exit(0)
+
     def tcp_wrench_callback(self, data) -> None:
         if self.controlled_axis == 'x':
             self.tcp_contact_force = data.wrench.force.x
@@ -139,14 +145,12 @@ class RobotController:
         self.tcp_force_offset = rospy.get_param("/tcp_force_offset")
         self.knob_command_force = tcp_force_feedback_ratio*(self.tcp_contact_force - self.tcp_force_offset)
         
-        #print("knob force: {}.\n".format(self.knob_command_force))
-
         if abs(self.knob_command_force) < 0.1:
             self.knob_command_force = 0
 
         self.CLAMP_FORCE_THRESHOLD_MAX = rospy.get_param('clamp_force_threshold_max')
         self.CLAMP_FORCE_THRESHOLD_MIN = rospy.get_param('clamp_force_threshold_min')
-        #clamp force lies in between 2 thresholds
+
         if self.knob_command_force > 0:
             clamp_force = min(self.CLAMP_FORCE_THRESHOLD_MAX, max(self.CLAMP_FORCE_THRESHOLD_MIN, self.knob_command_force))
         else:
@@ -163,9 +167,7 @@ class RobotController:
         self.pose.pose.position.y = self.robot_tcp_position_target[1]
         self.pose.pose.position.z = self.robot_tcp_position_target[2]
 
-        # Publish the Cartesian pose
         self.fri_cartesian_move_publisher.publish(self.pose)
-        #print("Sending fri position to robot: {}.\n".format(self.pose.pose.position.z))
 
     def run(self) -> None:
         while not rospy.is_shutdown():
@@ -185,4 +187,3 @@ if __name__ == '__main__':
 
     controller = RobotController()
     controller.run()
-

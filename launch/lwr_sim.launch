@@ -1,5 +1,0 @@
-<launch>
-    <include file="$(find fortiss_lwr_launch)/launch/moveit.launch">
-        <arg name="load_moveit" value="true"/>
-    </include>
-</launch>
