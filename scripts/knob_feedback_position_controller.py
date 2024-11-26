@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from spatialmath import SO3, SE3
 import sys
 import signal
 import rospy
@@ -94,7 +95,7 @@ class RobotController:
 
     def franka_state_callback(self, data):
     	
-        #cartesian TCP wrench
+        # cartesian TCP wrench
         if self.controlled_axis == 'x':
             self.tcp_contact_force = data.K_F_ext_hat_K[0]
         elif self.controlled_axis == 'y':
@@ -102,24 +103,30 @@ class RobotController:
         elif self.controlled_axis == 'z':
             self.tcp_contact_force = data.K_F_ext_hat_K[2]
            
-        #cartesian TCP pose
-        robot_tcp_cartesian_pose_1x16 = np.array(data.O_T_EE)
+        # Convert O_T_EE matrix to SE3
+        robot_tcp_matrix = np.array(data.O_T_EE).reshape(4,4).T
         
-        robot_tcp_cartesian_rotation_matrix = np.array([[robot_tcp_cartesian_pose_1x16[0], robot_tcp_cartesian_pose_1x16[1], robot_tcp_cartesian_pose_1x16[2]],
-        						[robot_tcp_cartesian_pose_1x16[4], robot_tcp_cartesian_pose_1x16[5], robot_tcp_cartesian_pose_1x16[6]],
-        						[robot_tcp_cartesian_pose_1x16[8], robot_tcp_cartesian_pose_1x16[9], robot_tcp_cartesian_pose_1x16[10]]])
+        # Extract and normalize rotation matrix
+        R_matrix = robot_tcp_matrix[:3,:3]
+        for i in range(3):
+            R_matrix[:,i] /= np.linalg.norm(R_matrix[:,i])
         
-        self.robot_tcp_position_current = [round(robot_tcp_cartesian_pose_1x16[3], 3), 
-        					round(robot_tcp_cartesian_pose_1x16[7], 3), 
-        					round(robot_tcp_cartesian_pose_1x16[11], 3)]
-        self.robot_tcp_orientation_current = R.from_matrix(robot_tcp_cartesian_rotation_matrix).as_euler('xyz', degrees=False)
+        so3 = SO3(R_matrix, check=False)
+        # Create SE3 from SO3 and set translation
+        tcp_pose = SE3(so3)
+        tcp_pose.t = robot_tcp_matrix[:3,3]
+        
+        # Extract position and orientation
+        self.robot_tcp_position_current = [
+            round(tcp_pose.t[0], 3),
+            round(tcp_pose.t[1], 3),
+            round(tcp_pose.t[2], 3)
+        ]
+        self.robot_tcp_orientation_current = so3.rpy(order='xyz')
         
         if not self.ROBOT_STATE_INITIALIZED:
-            self.robot_tcp_position_target = [round(robot_tcp_cartesian_pose_1x16[3], 3), 
-				                round(robot_tcp_cartesian_pose_1x16[7], 3), 
-				                round(robot_tcp_cartesian_pose_1x16[11], 3)]
-            self.robot_tcp_orientation_target = R.from_matrix(robot_tcp_cartesian_rotation_matrix).as_euler('xyz', degrees=False)
-				                
+            self.robot_tcp_position_target = self.robot_tcp_position_current.copy()
+            self.robot_tcp_orientation_target = self.robot_tcp_orientation_current.copy()
             self.ROBOT_STATE_INITIALIZED = True
 
     def knob_state_callback(self, data):
@@ -176,20 +183,25 @@ class RobotController:
         self.knob_force_pub.publish(self.knob_force_command_msg)
 
     def publish_tcp_cartesian_pose(self):
-        
         self.update_robot_command_pose()
         
+        # Create SO3 from RPY angles
+        so3 = SO3.RPY(self.robot_tcp_orientation_target, order='xyz')
+        # Create SE3 from SO3 and set translation
+        target_pose = SE3(so3)
+        target_pose.t = self.robot_tcp_position_target
+        
+        # Update position
         self.pose.pose.position.x = self.robot_tcp_position_target[0]
         self.pose.pose.position.y = self.robot_tcp_position_target[1]
-        self.pose.pose.position.z = self.robot_tcp_position_target[2]
-        
-        rotation_from_euler = R.from_euler('xyz', self.robot_tcp_orientation_target, degrees=False)
-        quat = rotation_from_euler.as_quat()
-        
-        self.pose.pose.orientation.x = quat[0]
-        self.pose.pose.orientation.y = quat[1]
-        self.pose.pose.orientation.z = quat[2]
-        self.pose.pose.orientation.w = quat[3]
+        self.pose.pose.position.z = self.robot_tcp_position_target[2]        
+
+        # Convert to quaternion
+        quat = target_pose.UnitQuaternion()
+        self.pose.pose.orientation.x = quat.vec3[0]
+        self.pose.pose.orientation.y = quat.vec3[1]
+        self.pose.pose.orientation.z = quat.vec3[2]
+        self.pose.pose.orientation.w = quat.s
 
         self.fri_cartesian_move_publisher.publish(self.pose)
 
