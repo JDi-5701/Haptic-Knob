@@ -79,7 +79,7 @@ class RobotController:
         rospy.set_param('reset_pose', False)    
         
         # Publishers and Subscribers
-        self.fri_cartesian_move_publisher = rospy.Publisher('/fri_cartesian_command', PoseStamped, queue_size=10)
+        self.fri_cartesian_move_publisher = rospy.Publisher('/equilibrium_pose', PoseStamped, queue_size=10)
         self.knob_state_subscriber = rospy.Subscriber("/knob_state", KnobState, self.knob_state_callback)
         self.franka_state_sub = rospy.Subscriber("/franka_state_controller/franka_states", FrankaState, self.franka_state_callback)
         self.knob_force_pub = rospy.Publisher("/tcp_force", Float32, queue_size=1)
@@ -114,7 +114,13 @@ class RobotController:
         					round(robot_tcp_cartesian_pose_1x16[11], 3)]
         self.robot_tcp_orientation_current = R.from_matrix(robot_tcp_cartesian_rotation_matrix).as_euler('xyz', degrees=False)
         
-        self.ROBOT_STATE_INITIALIZED = True
+        if not self.ROBOT_STATE_INITIALIZED:
+            self.robot_tcp_position_target = [round(robot_tcp_cartesian_pose_1x16[3], 3), 
+				                round(robot_tcp_cartesian_pose_1x16[7], 3), 
+				                round(robot_tcp_cartesian_pose_1x16[11], 3)]
+            self.robot_tcp_orientation_target = R.from_matrix(robot_tcp_cartesian_rotation_matrix).as_euler('xyz', degrees=False)
+				                
+            self.ROBOT_STATE_INITIALIZED = True
 
     def knob_state_callback(self, data):
         self.knob_position_current = data.position.data
@@ -176,6 +182,14 @@ class RobotController:
         self.pose.pose.position.x = self.robot_tcp_position_target[0]
         self.pose.pose.position.y = self.robot_tcp_position_target[1]
         self.pose.pose.position.z = self.robot_tcp_position_target[2]
+        
+        rotation_from_euler = R.from_euler('xyz', self.robot_tcp_orientation_target, degrees=False)
+        quat = rotation_from_euler.as_quat()
+        
+        self.pose.pose.orientation.x = quat[0]
+        self.pose.pose.orientation.y = quat[1]
+        self.pose.pose.orientation.z = quat[2]
+        self.pose.pose.orientation.w = quat[3]
 
         self.fri_cartesian_move_publisher.publish(self.pose)
 

@@ -1,7 +1,7 @@
 <launch>
     <!-- Define arguments with default values -->
-    <arg name="fake_robot" default="true"/>
-    <arg name="fake_knob" default="true"/>
+    <arg name="fake_robot" default="false"/>
+    <arg name="fake_knob" default="false"/>
 
     <!-- Launch the main controller node -->
     <node pkg="knob_robot_control" type="knob_feedback_position_controller.py" name="knob_feedback_position_controller" output="screen"/>
