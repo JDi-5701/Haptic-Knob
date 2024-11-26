@@ -99,9 +99,9 @@ class RobotController:
         if self.controlled_axis == 'x':
             self.tcp_contact_force = data.K_F_ext_hat_K[0]
         elif self.controlled_axis == 'y':
-            self.tcp_contact_force = data.K_F_ext_hat_K[1]
+            self.tcp_contact_force = - data.K_F_ext_hat_K[1]
         elif self.controlled_axis == 'z':
-            self.tcp_contact_force = data.K_F_ext_hat_K[2]
+            self.tcp_contact_force = - data.K_F_ext_hat_K[2]
            
         # Convert O_T_EE matrix to SE3
         robot_tcp_matrix = np.array(data.O_T_EE).reshape(4,4).T
