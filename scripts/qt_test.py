@@ -48,14 +48,49 @@ class ROSVisualizer(QWidget):
 
         # Slider to adjust the position_factor ROS parameter
         self.position_factor_slider = QSlider(Qt.Horizontal, self)
-        self.position_factor_slider.setMinimum(100)   # Representing 0.00010
+        self.position_factor_slider.setMinimum(50)   # Representing 0.00010
         self.position_factor_slider.setMaximum(500)   # Representing 0.00050
-        self.position_factor_slider.setValue(100)     # Initial value
+        self.position_factor_slider.setValue(50)     # Initial value
         self.position_factor_slider.valueChanged.connect(self.updatePositionFactor)
 
         # Label to display the current position_factor value
         self.position_factor_label = QLabel("Position Factor: 0.00010", self)
         self.position_factor_label.setStyleSheet("font-size: 18px; color: green;")
+        
+        self.position_factor_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                border: 1px solid #bbb;
+                background: #eee;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            QSlider::handle:horizontal {
+                background: #388E3C;  /* Green */
+                border: 1px solid #5c5c5c;
+                width: 18px;
+                margin: -7px 0; /* Center handle */
+                border-radius: 9px;
+            }
+
+            QSlider::handle:horizontal:hover {
+                background: #4CAF50; /* Lighter green when hovered */
+            }
+
+            QSlider::sub-page:horizontal {
+                background: #76FF03; /* Lighter green to show progress */
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            QSlider::add-page:horizontal {
+                background: #ccc;
+                border: 1px solid #aaa;
+                height: 8px;
+                border-radius: 4px;
+            }
+        """)
 
         # Slider to adjust the tcp_force_feedback_ratio ROS parameter
         self.tcp_force_slider = QSlider(Qt.Horizontal, self)
@@ -67,6 +102,41 @@ class ROSVisualizer(QWidget):
         # Label to display the current tcp_force_feedback_ratio value
         self.tcp_force_label = QLabel("TCP Force Feedback Ratio: 0.01", self)
         self.tcp_force_label.setStyleSheet("font-size: 18px; color: red;")
+        
+        self.tcp_force_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                border: 1px solid #bbb;
+                background: #eee;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            QSlider::handle:horizontal {
+                background: #cf310f;  /* Red */
+                border: 1px solid #5c5c5c;
+                width: 18px;
+                margin: -7px 0; /* Center handle */
+                border-radius: 9px;
+            }
+
+            QSlider::handle:horizontal:hover {
+                background: #f04d2a; /* Lighter red when hovered */
+            }
+
+            QSlider::sub-page:horizontal {
+                background: #f04d2a; /* Lighter green to show progress */
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 4px;
+            }
+
+            QSlider::add-page:horizontal {
+                background: #ccc;
+                border: 1px solid #aaa;
+                height: 8px;
+                border-radius: 4px;
+            }
+        """)
 
         # Radio buttons for controlled_axis
         self.radio_x = QRadioButton("X")
@@ -122,7 +192,7 @@ class ROSVisualizer(QWidget):
 
     def updatePositionFactor(self):
         """Update the position_factor ROS parameter based on the slider's value."""
-        param_value = self.position_factor_slider.value() / 10000.0  # Convert to float (0.00010 to 0.00050)
+        param_value = self.position_factor_slider.value() / 500000.0  # Convert to float (0.00010 to 0.00050)
         rospy.set_param(self.param_position_factor, param_value)
         self.position_factor_label.setText(f"Position Factor: {param_value:.5f}")
 
