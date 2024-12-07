@@ -38,7 +38,7 @@ class RobotController:
 
         self.ROBOT_STATE_INITIALIZED = False
 
-        rospy.set_param("/position_factor", 0.00003)
+        rospy.set_param("/position_factor", 0.0001)
         self.position_factor = rospy.get_param("/position_factor")
         
         self.position_change = 0.0
@@ -55,9 +55,9 @@ class RobotController:
         self.pose.pose.orientation.z = 0.0
         self.pose.pose.orientation.w = 1.0
 
-        rospy.set_param("/tcp_force_feedback_ratio", 0.08)
+        rospy.set_param("/tcp_force_feedback_ratio", 0.01)
 
-        rospy.set_param('clamp_force_threshold_max', 2)
+        rospy.set_param('clamp_force_threshold_max', 1.5)
         self.CLAMP_FORCE_THRESHOLD_MAX = rospy.get_param('clamp_force_threshold_max')
         rospy.set_param('clamp_force_threshold_min', 0)
         self.CLAMP_FORCE_THRESHOLD_MIN = rospy.get_param('clamp_force_threshold_min')
