@@ -57,7 +57,7 @@ class RobotController:
 
         rospy.set_param("/tcp_force_feedback_ratio", 0.01)
 
-        rospy.set_param('clamp_force_threshold_max', 1.5)
+        rospy.set_param('clamp_force_threshold_max', 2)
         self.CLAMP_FORCE_THRESHOLD_MAX = rospy.get_param('clamp_force_threshold_max')
         rospy.set_param('clamp_force_threshold_min', 0)
         self.CLAMP_FORCE_THRESHOLD_MIN = rospy.get_param('clamp_force_threshold_min')
