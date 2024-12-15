@@ -80,7 +80,7 @@ class RobotController:
         rospy.set_param('reset_pose', False)    
         
         # Publishers and Subscribers
-        self.fri_cartesian_move_publisher = rospy.Publisher('/equilibrium_pose', PoseStamped, queue_size=10)
+        self.fri_cartesian_move_publisher = rospy.Publisher('/knob/equilibrium_pose', PoseStamped, queue_size=1)
         self.knob_state_subscriber = rospy.Subscriber("/knob_state", KnobState, self.knob_state_callback)
         self.franka_state_sub = rospy.Subscriber("/franka_state_controller/franka_states", FrankaState, self.franka_state_callback)
         self.knob_force_pub = rospy.Publisher("/tcp_force", Float32, queue_size=1)
