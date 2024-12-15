@@ -35,7 +35,7 @@ class ROSVisualizer(QWidget):
         # Set initial ROS parameter values
         rospy.set_param(self.param_position_factor, 0.00010)
         rospy.set_param(self.param_tcp_force_feedback_ratio, 0.01)
-        rospy.set_param(self.param_axis, "x")
+        rospy.set_param(self.param_axis, "z")
         rospy.set_param(self.param_reset_pose, False)
 
     def initUI(self):
@@ -142,7 +142,7 @@ class ROSVisualizer(QWidget):
         self.radio_x = QRadioButton("X")
         self.radio_y = QRadioButton("Y")
         self.radio_z = QRadioButton("Z")
-        self.radio_x.setChecked(True)  # Default selection
+        self.radio_z.setChecked(True)  # Default selection
 
         # Group the radio buttons
         self.axis_group = QButtonGroup(self)
